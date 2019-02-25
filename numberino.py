@@ -1,5 +1,6 @@
 import click
 import math
+import os
 from colorama import init, Fore, Back, Style
 
 _INITIAL_DIVIDERS = (
@@ -69,7 +70,7 @@ def reduce_div(i):
         return ri
     return NOT
 
-PRIME = '•'
+PRIME = '█'
 def reduce_div_or_prime(i):
     div = reduce_div(i)
     if is_prime(i):
@@ -79,6 +80,10 @@ def reduce_div_or_prime(i):
 def chunkify(sliceable, size):
     return ((i, sliceable[i:i+size]) for i in range(0, len(sliceable), size))
 
+def get_terminal_size():
+    rows, cols = os.popen('stty size', 'r').read().split()
+    return int(rows), int(cols)
+
 algo_mapping = {
     'reduce': reduce_i,
     'reducediv': reduce_div,
@@ -86,18 +91,19 @@ algo_mapping = {
 }
 
 color_mapping = {
-    '█': Fore.BLACK + Style.DIM,
+    '▌': Fore.BLACK + Style.DIM,
+    '▐': Fore.BLACK + Style.DIM,
     PRIME: Fore.WHITE + Style.BRIGHT,
     '0': Fore.WHITE,
-    '1': Fore.BLUE,
-    '2': Fore.CYAN,
-    '3': Fore.MAGENTA,
-    '4': Fore.WHITE,
-    '5': Fore.WHITE,
-    '6': Fore.WHITE,
-    '7': Fore.WHITE,
-    '8': Fore.WHITE,
-    '9': Fore.RED,
+    '8': Fore.RED,
+    '7': Fore.RED + Style.BRIGHT,
+    '6': Fore.CYAN,
+    '5': Fore.CYAN + Style.BRIGHT,
+    '4': Fore.MAGENTA,
+    '3': Fore.MAGENTA + Style.BRIGHT,
+    '2': Fore.WHITE,
+    '1': Fore.WHITE,
+    '9': Fore.WHITE,
 }
 COLOR_RESET = Fore.RESET + Back.RESET + Style.RESET_ALL
 
@@ -117,15 +123,22 @@ def cli():
 
 @cli.command()
 @click.option('-s', '--start', type=int, default=0)
-@click.option('-e', '--end', type=int)
+@click.option('-e', '--end', type=int, default=None)
+@click.option('-E', '--length', type=int, default=None)
 @click.option('-z', '--size', default=10)
 @click.option('-a', '--algo', default='reduce')
-def run(start, end, size, algo):
+def run(start, end, length, size, algo):
+    rows, cols = get_terminal_size()
+    if end is None:
+        if length is not None:
+            end = start + length
+        else:
+            end = start + (size * (rows - 2))
     fn = algo_mapping[algo]
     results = [fn(i) for i in range(start, end)]
     for s, l in chunkify(results, size):
-        output_line = colorize('{:>8} █ {} █ '.format(
-            s,
+        output_line = colorize('{:>10} ▌{}▐ '.format(
+            s+start,
             ''.join([str(i) for i in l]),
         ))
         print(output_line)

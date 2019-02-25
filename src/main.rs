@@ -5,25 +5,6 @@ extern crate test;
 use pbr::ProgressBar;
 use std::collections::HashSet;
 
-const INITIAL_DIVIDERS: [(u64, u64); 17] = [
-    (3, 9),
-    (5, 25),
-    (7, 49),
-    (11, 121),
-    (13, 169),
-    (17, 289),
-    (19, 361),
-    (23, 529),
-    (29, 841),
-    (31, 961),
-    (37, 1369),
-    (41, 1681),
-    (43, 1849),
-    (47, 2209),
-    (53, 2809),
-    (59, 3481),
-    (61, 3721),
-];
 fn is_prime(n: u64) -> bool {
     if n & 1 == 0 {
         return n == 2;
@@ -53,36 +34,68 @@ fn is_prime(n: u64) -> bool {
     true
 }
 
+const INITIAL_DIVIDERS: [(u64, u64); 17] = [
+    (3, 9),
+    (5, 25),
+    (7, 49),
+    (11, 121),
+    (13, 169),
+    (17, 289),
+    (19, 361),
+    (23, 529),
+    (29, 841),
+    (31, 961),
+    (37, 1369),
+    (41, 1681),
+    (43, 1849),
+    (47, 2209),
+    (53, 2809),
+    (59, 3481),
+    (61, 3721),
+];
+
 fn is_prime_fast(n: u64) -> bool {
+    // A number divisible by 2 is only prime when it is 2.
     if n & 1 == 0 {
         return n == 2;
     }
+    // The number 3 is prime.
     if n == 3 {
         return true;
     }
+    // Numbers below 2 are not prime.
     if n < 2 {
         return false;
     }
-
+    // Prime numbers larger than 3 are a result of 6n±1.
+    //
+    // If neither number beside the prime number is divisible by 6
+    // it is not a prime number.
+    // 
+    // Gives a ~5% speed boost.
+    let prev_mod = (n - 1) % 6;
+    if prev_mod != 0 && prev_mod != 4 {
+        return false;
+    }
+    // Check the number against a precomputed list of prime numbers.
     for (d, dxd) in INITIAL_DIVIDERS.iter() {
         if dxd > &n {
+            // The current prime divider squared is larger than the number
+            // It is prime.
             return true;
         }
         if n % d == 0 {
             return false;
         }
     }
-
-    if !is_reduce_div(n-1) && !is_reduce_div(n+1) {
-        return false;
-    }
-
     let max_d: u64 = (n as f64).sqrt() as u64;
     for d in (65..max_d).step_by(6) {
         if n % d == 0 || n % (d + 2) == 0 {
             return false;
         }
     }
+    // We can not prove that the number is not prime.
+    //   It is prime.
     true
 }
 
@@ -159,7 +172,16 @@ mod tests {
     #[test]
     fn test_is_prime_fast() {
         for i in 0..1000000 {
-            assert_eq!(is_prime(i), is_prime_fast(i));
+            let slow = is_prime(i);
+            let fast = is_prime_fast(i);
+            assert_eq!(
+                slow,
+                fast,
+                "The number {} was unclear (slow:{}, fast:{})",
+                i,
+                slow,
+                fast,
+            );
         }
     }
 
