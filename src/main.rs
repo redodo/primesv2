@@ -180,19 +180,28 @@ fn split_n(mut n: u64) -> Vec<u64> {
     split
 }
 
-fn main() {
-    let max = 1000000000;
-    let step_update = 0xFFFF;
-    let mut bar = ProgressBar::new(max);
-
+#[allow(dead_code)]
+fn do_prime_fn() {
+    let max = 5000000;
     for i in 0..max {
-        if i & step_update == step_update {
-            bar.add(step_update);
-        }
         is_prime_fast(i);
     }
+}
 
-    bar.finish_print("All numbers were checked.");
+#[allow(dead_code)]
+fn do_mod_test() {
+    let max = 50;
+    let a = 5;
+    let b = 7;
+
+    for i in 0..max {
+        println!("{:>4} : {} : {}", i, i % a, i % b % a);
+     }
+}
+
+fn main() {
+    do_prime_fn();
+    // do_mod_test();
 }
 
 #[cfg(test)]
@@ -219,7 +228,7 @@ mod tests {
     #[bench]
     fn bench_is_prime(b: &mut Bencher) {
         b.iter(|| {
-            for i in 0..100000 {
+            for i in 0..1000000 {
                 is_prime(i);
             }
         });
@@ -228,7 +237,7 @@ mod tests {
     #[bench]
     fn bench_is_prime_fast(b: &mut Bencher) {
         b.iter(|| {
-            for i in 0..100000 {
+            for i in 0..1000000 {
                 is_prime_fast(i);
             }
         });
