@@ -68,6 +68,8 @@ bool is_prime_fast(uint64_t n) {
         // We skip division with multiples of 5 and 7.
         // Which is why we have this hardcoded loop of 35 operations (5 * 7)
         //
+        // This further limits the numbers we divide with by 31%
+        //
         // Skipping 11 too would require a loop of 385 operations (5 * 7 * 11) 
         _6n1_both(n, d, max_d);
         _6n1_right(n, d, max_d);
