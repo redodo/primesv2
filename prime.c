@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#define baked_prime_check(n,p,m)   if (n % p == 0) return n < m
+#define baked_prime_check(n,p,m)   if (n < m) return true; if (n % p == 0) return false;
 
 bool is_prime_slow(uint64_t n) {
     if ((n & 1) == 0) {
@@ -21,6 +21,10 @@ bool is_prime_slow(uint64_t n) {
     return true;
 }
 
+#define 6n1_both(n, d)          if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
+#define 6n1_left(n, d)          if ((n % d) == 0) return false;
+#define 6n1_right(n, d)         if ((n % (d + 2)) == 0) return false;
+#define 6n1_addstop(d, max_d)   d += 6; if (d >= max_d) return true;
 bool is_prime_fast(uint64_t n) {
     // An even number is only prime when it is 2.
     if ((n & 1) == 0) {
@@ -54,15 +58,36 @@ bool is_prime_fast(uint64_t n) {
     baked_prime_check(n, 59, 3481);
     baked_prime_check(n, 61, 3721);
     baked_prime_check(n, 67, 4489);
+
     // Exhaust all other options.
     uint64_t max_d = (uint64_t) sqrt((long double) n) + 1;
-    for (uint64_t d = 71; d < max_d; d += 6) {
-        printf("%d : dividing by %d and %d\n", n, d, d + 2);
-        if ((n % d) == 0 || (n % (d + 2)) == 0) {
-            return false;
-        }
+    uint64_t d = 71;
+    while (true) {
+        // 1st iteration: check 6n-1 and 6n+1
+        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
+        d += 6;
+        if (d >= max_d) return true;
+
+        // 2nd iteration: check 6n-1 and 6n+1
+        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
+        d += 6;
+        if (d >= max_d) return true;
+
+        // 3rd iteration: CHECK ONLY 6n-1
+        if ((n % d) == 0) return false;
+        d += 6;
+        if (d >= max_d) return true;
+
+        // 4th iteration: check 6n-1 6n+1
+        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
+        d += 6;
+        if (d >= max_d) return true;
+
+        // 5th iteration: CHECK ONLY 6n+1
+        if ((n % (d + 2)) == 0) return false;
+        d += 6;
+        if (d >= max_d) return true;
     }
-    return true;
 }
 
 void test_prime_fast(uint64_t range) {
@@ -84,6 +109,7 @@ void run_prime_fast(uint64_t range) {
 }
 
 int main() {
-    test_prime_fast(10000);
+    //test_prime_fast(100000);
+    run_prime_fast(5000000);
     return 0;
 }
