@@ -1,10 +1,45 @@
 #![feature(test)]
-
 extern crate test;
 
 use pbr::ProgressBar;
-use std::collections::HashSet;
 
+const INITIAL_DIVIDERS: [(u64, u64); 17] = [
+    (3, 9),
+    (5, 25),
+    (7, 49),
+    (11, 121),
+    (13, 169),
+    (17, 289),
+    (19, 361),
+    (23, 529),
+    (29, 841),
+    (31, 961),
+    (37, 1369),
+    (41, 1681),
+    (43, 1849),
+    (47, 2209),
+    (53, 2809),
+    (59, 3481),
+    (61, 3721),
+];
+const INITIAL_DIVIDERS_ALT: [(u64, u64); 14] = [
+    (11, 121),
+    (13, 169),
+    (17, 289),
+    (19, 361),
+    (23, 529),
+    (29, 841),
+    (31, 961),
+    (37, 1369),
+    (41, 1681),
+    (43, 1849),
+    (47, 2209),
+    (53, 2809),
+    (59, 3481),
+    (61, 3721),
+];
+
+#[allow(dead_code)]
 fn is_prime(n: u64) -> bool {
     if n & 1 == 0 {
         return n == 2;
@@ -34,51 +69,64 @@ fn is_prime(n: u64) -> bool {
     true
 }
 
-const INITIAL_DIVIDERS: [(u64, u64); 17] = [
-    (3, 9),
-    (5, 25),
-    (7, 49),
-    (11, 121),
-    (13, 169),
-    (17, 289),
-    (19, 361),
-    (23, 529),
-    (29, 841),
-    (31, 961),
-    (37, 1369),
-    (41, 1681),
-    (43, 1849),
-    (47, 2209),
-    (53, 2809),
-    (59, 3481),
-    (61, 3721),
-];
+/// Bakes a precomputed primelist check into the code to save time doing list iteration.
+macro_rules! precomputed_prime_list_check {
+    ( $n:expr, [ $( ( $d:expr, $dxd:expr ) ),+ ] ) => {
+        $(
+            if $dxd > &$n { return true; }
+            if $n % $d == 0 { return false; }
+        )*
+    };
+}
 
+#[allow(dead_code)]
 fn is_prime_fast(n: u64) -> bool {
-    // A number divisible by 2 is only prime when it is 2.
+    // An even number is only prime when it is 2.
     if n & 1 == 0 {
         return n == 2;
     }
-    // The number 3 is prime.
-    if n == 3 {
-        return true;
+    // An uneven number below 4 is only prime when it is 3.
+    if n <= 3 {
+        return n == 3;
     }
-    // Numbers below 2 are not prime.
-    if n < 2 {
-        return false;
-    }
+
+    // First we check the number against 3, 5, and 7
+    // Check against 3.
+    if n < 9 { return true; }
+    if n % 3 == 0 { return false; }
+    // Check against 5.
+    if n < 25 { return true; }
+    if n % 5 == 0 { return false; }
+    // Check against 7.
+    if n < 49 { return true; }
+    if n % 7 == 0 { return false; }
+
     // Prime numbers larger than 3 are a result of 6n±1.
-    //
-    // If neither number beside the prime number is divisible by 6
-    // it is not a prime number.
-    // 
-    // Gives a ~5% speed boost.
-    let prev_mod = (n - 1) % 6;
-    if prev_mod != 0 && prev_mod != 4 {
+    if n % 6 & 3 != 1 {
         return false;
     }
-    // Check the number against a precomputed list of prime numbers.
-    for (d, dxd) in INITIAL_DIVIDERS.iter() {
+    /*
+    precomputed_prime_list_check!(n, [
+        ( 3,    9),
+        ( 5,   25),
+        ( 7,   49),
+        (11,  121),
+        (13,  169),
+        (17,  289),
+        (19,  361),
+        (23,  529),
+        (29,  841),
+        (31,  961),
+        (37, 1369),
+        (41, 1681),
+        (43, 1849),
+        (47, 2209),
+        (53, 2809),
+        (59, 3481),
+        (61, 3721),
+    ]);
+    */
+    for (d, dxd) in INITIAL_DIVIDERS_ALT.iter() {
         if dxd > &n {
             // The current prime divider squared is larger than the number
             // It is prime.
@@ -99,6 +147,7 @@ fn is_prime_fast(n: u64) -> bool {
     true
 }
 
+#[allow(dead_code)]
 fn reduce_i(n: u64) -> u64 {
     if n == 0 {
         return 0;
@@ -110,6 +159,7 @@ fn reduce_i(n: u64) -> u64 {
     m
 }
 
+#[allow(dead_code)]
 fn is_reduce_div(n: u64) -> bool {
     if n == 0 {
         return false;
@@ -134,33 +184,14 @@ fn main() {
     let max = 1000000000;
     let step_update = 0xFFFF;
     let mut bar = ProgressBar::new(max);
-    let mut divi: HashSet<u64> = HashSet::new();
 
     for i in 0..max {
-
         if i & step_update == step_update {
             bar.add(step_update);
         }
-
-        if !is_reduce_div(i-1) && !is_reduce_div(i+1) {
-            for y in 2..10 {
-                if i % y == 0 {
-                    divi.insert(y);
-                    break;
-                }
-            }
-        }
-
-        /*
-        if is_prime(i) {
-            if !is_reduce_div(i-1) && !is_reduce_div(i+1) {
-                println!("{} failed", i);
-                break;
-            }
-        }
-        */
+        is_prime_fast(i);
     }
-    println!("{:?}", divi);
+
     bar.finish_print("All numbers were checked.");
 }
 
