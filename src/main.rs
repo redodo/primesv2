@@ -25,7 +25,7 @@ fn is_prime(n: u64) -> bool {
         }
     }
 
-    let max_d: u64 = (n as f64).sqrt() as u64;
+    let max_d: u64 = (n as f64).sqrt() as u64 + 1;
     for d in (65..max_d).step_by(6) {
         if n % d == 0 || n % (d + 2) == 0 {
             return false;
@@ -88,7 +88,7 @@ fn is_prime_fast(n: u64) -> bool {
             return false;
         }
     }
-    let max_d: u64 = (n as f64).sqrt() as u64;
+    let max_d: u64 = (n as f64).sqrt() as u64 + 1;
     for d in (65..max_d).step_by(6) {
         if n % d == 0 || n % (d + 2) == 0 {
             return false;
