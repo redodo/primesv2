@@ -21,11 +21,16 @@ bool is_prime_slow(uint64_t n) {
     return true;
 }
 
-#define _6n1_addstop(d, max_d)   d += 6; if (d >= max_d) return true;
-#define _6n1_both(n, d, max_d)   if ((n % d) == 0 || (n % (d + 2)) == 0) return false; _6n1_addstop(d, max_d)
-#define _6n1_left(n, d, max_d)   if ((n % d) == 0) return false; _6n1_addstop(d, max_d)
-#define _6n1_right(n, d, max_d)  if ((n % (d + 2)) == 0) return false; _6n1_addstop(d, max_d)
-#define _6n1_none(n, d, max_d)   _6n1_addstop(d, max_d)
+// Increment the divider by step and stop when the max has been reached.
+#define _6n1_inc_stop(d, max_d, step)      d += step; if (d >= max_d) return true;
+// Check both 6n-1 and 6n+1. Do one inc_stop. Use step value 6 as base.
+#define _6n1_both(n, d, max_d, step)      if ((n % d) == 0 || (n % (d + 2)) == 0) return false; _6n1_inc_stop(d, max_d, step)
+// Check only 6n-1. Do one inc_stop. Use step value 6 as base.
+#define _6n1_left(n, d, max_d, step)      if ((n % d) == 0) return false; _6n1_inc_stop(d, max_d, step)
+// Check only 6n+1. Do one inc_stop. Use step value 4 as base. THE MACRO PRECEDING THIS MUST INCREASE ITS STEP BY 2.
+#define _6n1_right(n, d, max_d, step)     if ((n % d) == 0) return false; _6n1_inc_stop(d, max_d, step)
+// Empty macro. Increase preceding macro step by 6.
+#define _6n1_none()
 
 bool is_prime_fast(uint64_t n) {
     // An even number is only prime when it is 2.
@@ -70,48 +75,44 @@ bool is_prime_fast(uint64_t n) {
         //
         // This further limits the numbers we divide with by 31%
         //
-        // Skipping 11 too would require a loop of 385 operations (5 * 7 * 11) 
-        _6n1_both(n, d, max_d);
-        _6n1_right(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_right(n, d, max_d);
+        // Skipping 11 too would require a loop of 385 operations (5 * 7 * 11)
 
-        _6n1_both(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_right(n, d, max_d);
-        _6n1_right(n, d, max_d);
-
-        _6n1_left(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_right(n, d, max_d);
-
-        _6n1_right(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_right(n, d, max_d);
-
-        _6n1_both(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_none(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_none(n, d, max_d);
-
-        _6n1_both(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_right(n, d, max_d);
-
-        _6n1_both(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_left(n, d, max_d);
-        _6n1_both(n, d, max_d);
-        _6n1_right(n, d, max_d);
+        //
+        _6n1_both(  n, d, max_d,  8); // - - ...1
+        _6n1_right( n, d, max_d,  4); // 7 - ...2
+        _6n1_left(  n, d, max_d,  6); // - 5 ...3
+        _6n1_left(  n, d, max_d,  8); // - 7 ...4
+        _6n1_right( n, d, max_d,  4); // 5 - ...5
+        _6n1_both(  n, d, max_d,  6); // - - ...6
+        _6n1_both(  n, d, max_d,  6); // - - ...7
+        _6n1_left(  n, d, max_d,  8); // - 5 ...8
+        _6n1_right( n, d, max_d,  6); // 7 - ...9
+        _6n1_right( n, d, max_d,  4); // 5 - ..10
+        _6n1_left(  n, d, max_d,  6); // - 7 ..11
+        _6n1_both(  n, d, max_d,  6); // - - ..12
+        _6n1_left(  n, d, max_d,  6); // - 5 ..13
+        _6n1_both(  n, d, max_d,  8); // - - ..14
+        _6n1_right( n, d, max_d,  6); // 5 - ..15
+        _6n1_right( n, d, max_d,  4); // 7 - ..16
+        _6n1_both(  n, d, max_d,  6); // - - ..17
+        _6n1_left(  n, d, max_d,  6); // - 5 ..18
+        _6n1_both(  n, d, max_d,  8); // - - ..19
+        _6n1_right( n, d, max_d,  4); // 5 - ..20
+        _6n1_both(  n, d, max_d,  6); // - - ..21
+        _6n1_both(  n, d, max_d, 12); // - - ..22
+        _6n1_none(                 ); // 7 5 ..23
+        _6n1_both(  n, d, max_d, 12); // - - ..24
+        _6n1_none(                 ); // 5 7 ..25
+        _6n1_both(  n, d, max_d,  6); // - - ..26
+        _6n1_both(  n, d, max_d,  6); // - - ..27
+        _6n1_left(  n, d, max_d,  6); // - 5 ..28
+        _6n1_both(  n, d, max_d,  8); // - - ..29
+        _6n1_right( n, d, max_d,  4); // 5 - ..30
+        _6n1_both(  n, d, max_d,  6); // - - ..31
+        _6n1_left(  n, d, max_d,  6); // - 7 ..32
+        _6n1_left(  n, d, max_d,  6); // - 5 ..33
+        _6n1_both(  n, d, max_d,  8); // - - ..34
+        _6n1_right( n, d, max_d,  4); // 5 - ..35
     }
 }
 
