@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#define baked_prime_check(n,p,m)   if (n < m) return true; if (n % p == 0) return false;
+#define _prime_check(n,p,m)   if (n < m) return true; if (n % p == 0) return false;
 
 bool is_prime_slow(uint64_t n) {
     if ((n & 1) == 0) {
@@ -21,10 +21,12 @@ bool is_prime_slow(uint64_t n) {
     return true;
 }
 
-#define 6n1_both(n, d)          if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
-#define 6n1_left(n, d)          if ((n % d) == 0) return false;
-#define 6n1_right(n, d)         if ((n % (d + 2)) == 0) return false;
-#define 6n1_addstop(d, max_d)   d += 6; if (d >= max_d) return true;
+#define _6n1_addstop(d, max_d)   d += 6; if (d >= max_d) return true;
+#define _6n1_both(n, d, max_d)   if ((n % d) == 0 || (n % (d + 2)) == 0) return false; _6n1_addstop(d, max_d)
+#define _6n1_left(n, d, max_d)   if ((n % d) == 0) return false; _6n1_addstop(d, max_d)
+#define _6n1_right(n, d, max_d)  if ((n % (d + 2)) == 0) return false; _6n1_addstop(d, max_d)
+#define _6n1_none(n, d, max_d)   _6n1_addstop(d, max_d)
+
 bool is_prime_fast(uint64_t n) {
     // An even number is only prime when it is 2.
     if ((n & 1) == 0) {
@@ -35,58 +37,79 @@ bool is_prime_fast(uint64_t n) {
         return n == 3;
     }
     // Check the number against 3, 5 and 7.
-    baked_prime_check(n,  3,    9);
-    baked_prime_check(n,  5,   25);
-    baked_prime_check(n,  7,   49);
+    _prime_check(n,  3,    9);
+    _prime_check(n,  5,   25);
+    _prime_check(n,  7,   49);
     // A number larger than 3 is only prime when it can be written as 6n±1.
     if ((n % 6 & 3) != 1) {
         return false;
     }
     // Check the number against all primes from 11 until 67.
-    baked_prime_check(n, 11,  121);
-    baked_prime_check(n, 13,  169);
-    baked_prime_check(n, 17,  289);
-    baked_prime_check(n, 19,  361);
-    baked_prime_check(n, 23,  529);
-    baked_prime_check(n, 29,  841);
-    baked_prime_check(n, 31,  961);
-    baked_prime_check(n, 37, 1369);
-    baked_prime_check(n, 41, 1681);
-    baked_prime_check(n, 43, 1849);
-    baked_prime_check(n, 47, 2209);
-    baked_prime_check(n, 53, 2809);
-    baked_prime_check(n, 59, 3481);
-    baked_prime_check(n, 61, 3721);
-    baked_prime_check(n, 67, 4489);
+    _prime_check(n, 11,  121);
+    _prime_check(n, 13,  169);
+    _prime_check(n, 17,  289);
+    _prime_check(n, 19,  361);
+    _prime_check(n, 23,  529);
+    _prime_check(n, 29,  841);
+    _prime_check(n, 31,  961);
+    _prime_check(n, 37, 1369);
+    _prime_check(n, 41, 1681);
+    _prime_check(n, 43, 1849);
+    _prime_check(n, 47, 2209);
+    _prime_check(n, 53, 2809);
+    _prime_check(n, 59, 3481);
+    _prime_check(n, 61, 3721);
+    _prime_check(n, 67, 4489);
 
     // Exhaust all other options.
     uint64_t max_d = (uint64_t) sqrt((long double) n) + 1;
     uint64_t d = 71;
     while (true) {
-        // 1st iteration: check 6n-1 and 6n+1
-        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
-        d += 6;
-        if (d >= max_d) return true;
+        // We skip division with multiples of 5 and 7.
+        // Which is why we have this hardcoded loop of 35 operations (5 * 7)
+        //
+        // Skipping 11 too would require a loop of 385 operations (5 * 7 * 11) 
+        _6n1_both(n, d, max_d);
+        _6n1_right(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_right(n, d, max_d);
 
-        // 2nd iteration: check 6n-1 and 6n+1
-        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
-        d += 6;
-        if (d >= max_d) return true;
+        _6n1_both(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_right(n, d, max_d);
+        _6n1_right(n, d, max_d);
 
-        // 3rd iteration: CHECK ONLY 6n-1
-        if ((n % d) == 0) return false;
-        d += 6;
-        if (d >= max_d) return true;
+        _6n1_left(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_right(n, d, max_d);
 
-        // 4th iteration: check 6n-1 6n+1
-        if ((n % d) == 0 || (n % (d + 2)) == 0) return false;
-        d += 6;
-        if (d >= max_d) return true;
+        _6n1_right(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_right(n, d, max_d);
 
-        // 5th iteration: CHECK ONLY 6n+1
-        if ((n % (d + 2)) == 0) return false;
-        d += 6;
-        if (d >= max_d) return true;
+        _6n1_both(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_none(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_none(n, d, max_d);
+
+        _6n1_both(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_right(n, d, max_d);
+
+        _6n1_both(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_left(n, d, max_d);
+        _6n1_both(n, d, max_d);
+        _6n1_right(n, d, max_d);
     }
 }
 
@@ -109,7 +132,7 @@ void run_prime_fast(uint64_t range) {
 }
 
 int main() {
-    //test_prime_fast(100000);
+    //test_prime_fast(10000000);
     run_prime_fast(5000000);
     return 0;
 }
