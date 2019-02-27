@@ -20,10 +20,14 @@ def generate_6n1_code(
         name_max_d='max_d',
         template='    {macro:<11}{name_n:>2}, {name_d}, {name_max_d}, {step:>2}); // {Ldiv:>2} {Rdiv:>2} {n:.>4}',
         ):
+
+    # Figure out the required number of statements.
     length = 1
     for d in dividers:
         length *= d
 
+    # Mapping to figure out which macro to use, given the (possible)
+    # primality of 6n-1 (left) and 6n+1 (right).
     macro_mapping = {
         # left is possibly prime
         True: {
@@ -40,6 +44,8 @@ def generate_6n1_code(
             False: macro_none,
         },
     }
+
+    # The default step count for macros.
     macro_step = {
         macro_both: 6,
         macro_left: 6,
@@ -47,9 +53,11 @@ def generate_6n1_code(
         macro_none: 0,
     }
 
-    # the first command is the starting position (d = start)
-    commands = [{'step': start}]
-    # generate the commands
+    # The first statement holds the starting position. The reason for
+    # this becomes apparent later.
+    statements = [{'step': start}]
+
+    # Generate the macro statements.
     for n in range(start, start + length):
         L = 6 * n -1
         R = 6 * n + 1
@@ -59,55 +67,59 @@ def generate_6n1_code(
         Rprime = not bool(Rdiv)
 
         macro = macro_mapping[Lprime][Rprime]
-        command = {
+        statement = {
             'macro': macro,
             'step': macro_step[macro],
             'Ldiv': '-' if Ldiv is None else Ldiv,
             'Rdiv': '-' if Rdiv is None else Rdiv,
             'n': n - start + 1,
         }
-        commands.append(command)
+        statements.append(statement)
 
-    # fix the step size (macros before right and none receive a step bonus of 2 and 6 respectively)
-    for i in range(len(commands) - 1):
-        curr_c = commands[i]
-        next_c = commands[i+1]
+    # Adjust the step sizes where needed. Macros before `_6n1_right` and
+    # `_6n1_none` receive a step bonus of 2 and 6 respectively.
+    #
+    # Because the starting position was added as a statement earlier,
+    # that will be adjusted here too.
+    for i in range(len(statements) - 1):
+        curr_c = statements[i]
+        next_c = statements[i+1]
         if next_c['macro'] == macro_right:
             curr_c['step'] += 2
         elif next_c['macro'] == macro_none:
             curr_c['step'] += 6
 
-    # empty names for none macro
+    # Empty names for the `_6n1_none` macro.
     empty_name_n = ' ' * len(name_n)
     empty_name_d = ' ' * len(name_d)
     empty_name_max_d = ' ' * len(name_max_d)
 
-    # output the code
-    print('uint64_t d = {};'.format(commands[0]['step']))
+    # Output the code.
+    print('uint64_t d = {};'.format(statements[0]['step']))
     print('while (true) {')
-    for command in commands[1:]:
-        if command['macro'] == macro_none:
+    for statement in statements[1:]:
+        if statement['macro'] == macro_none:
             # nicely format a macro_none output
             print(template.format(
-                macro=command['macro'],
+                macro=statement['macro'],
                 name_n=empty_name_n,
                 name_d=empty_name_d,
                 name_max_d=empty_name_max_d,
                 step='',
-                Ldiv=command['Ldiv'],
-                Rdiv=command['Rdiv'],
-                n=command['n'],
+                Ldiv=statement['Ldiv'],
+                Rdiv=statement['Rdiv'],
+                n=statement['n'],
             ).replace(',', ' '))
         else:
             print(template.format(
-                macro=command['macro'],
+                macro=statement['macro'],
                 name_n=name_n,
                 name_d=name_d,
                 name_max_d=name_max_d,
-                step=command['step'],
-                Ldiv=command['Ldiv'],
-                Rdiv=command['Rdiv'],
-                n=command['n'],
+                step=statement['step'],
+                Ldiv=statement['Ldiv'],
+                Rdiv=statement['Rdiv'],
+                n=statement['n'],
             ))
     print('}')
 
@@ -116,11 +128,11 @@ def generate_6n1_code(
 @click.argument('start', type=int)
 @click.argument('dividers', nargs=-1, type=int)
 def generate(start, dividers):
-    # start must be a writeable as 6n±1
-    if start % 6 & 3 == 1:
+    # start must be a writeable as 6n-1
+    if start % 6 == 5:
         generate_6n1_code(start, dividers)
     else:
-        print('Start can not be written as 6n±1. Stopped code generation.')
+        print('Start can not be written as 6n-1. Stopped code generation.')
 
 
 if __name__ == '__main__':
