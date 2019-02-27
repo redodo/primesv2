@@ -117,7 +117,7 @@ def generate_6n1_code(
 @click.argument('dividers', nargs=-1, type=int)
 def generate(start, dividers):
     # start must be a writeable as 6n±1
-    if start % 6 & 1 == 1:
+    if start % 6 & 3 == 1:
         generate_6n1_code(start, dividers)
     else:
         print('Start can not be written as 6n±1. Stopped code generation.')
