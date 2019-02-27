@@ -117,6 +117,37 @@ def colorize(string):
             new_string += c
     return new_string
 
+def _check_divider(n, dividers):
+    for d in dividers:
+        if n % d == 0:
+            return d
+    return None
+
+def check_6n1_range(start, dividers=(5,7)):
+    length = 1
+    for d in dividers:
+        length *= d
+    print('n       6n-1    6n+1  %  %')
+    total = length * 2
+    skippable = 0
+    for i in range(start, start + length):
+        l = i * 6 - 1
+        r = i * 6 + 1
+        ld = _check_divider(l, dividers)
+        rd = _check_divider(r, dividers)
+        if ld is not None:
+            skippable += 1
+        if rd is not None:
+            skippable += 1
+        print('{:<4}{:>8}{:>8} {:>2} {:>2}'.format(
+            i, l, r, str(ld) if ld else '-', str(rd) if rd else '-',
+        ))
+    print('{} out of {} operations can be skipped by applying this pattern ({:.1f}%)'.format(
+        skippable,
+        total,
+        skippable / total * 100,
+    ))
+
 @click.group()
 def cli():
     pass
