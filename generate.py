@@ -81,13 +81,15 @@ def generate_6n1_code(
     #
     # Because the starting position was added as a statement earlier,
     # that will be adjusted here too.
-    for i in range(len(statements) - 1):
+    for i in reversed(range(len(statements) - 1)):
         curr_c = statements[i]
         next_c = statements[i+1]
         if next_c['macro'] == macro_right:
             curr_c['step'] += 2
         elif next_c['macro'] == macro_none:
-            curr_c['step'] += 6
+            #                                    Add the step size of the none macro
+            #                   :--------------: which can be something other than 0.
+            curr_c['step'] += 6 + next_c['step']
 
     # Empty names for the `_6n1_none` macro.
     empty_name_n = ' ' * len(name_n)
