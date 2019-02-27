@@ -58,8 +58,9 @@ def generate_6n1_code(
     statements = [{'step': start}]
 
     # Generate the macro statements.
-    for n in range(start, start + length):
-        L = 6 * n -1
+    start_n = round(start / 6.0)
+    for ni, n in enumerate(range(start_n, start_n + length)):
+        L = 6 * n - 1
         R = 6 * n + 1
         Ldiv = _check_divider(L, dividers)
         Rdiv = _check_divider(R, dividers)
@@ -72,7 +73,7 @@ def generate_6n1_code(
             'step': macro_step[macro],
             'Ldiv': '-' if Ldiv is None else Ldiv,
             'Rdiv': '-' if Rdiv is None else Rdiv,
-            'n': n - start + 1,
+            'n': ni + 1,
         }
         statements.append(statement)
 
@@ -134,7 +135,7 @@ def generate(start, dividers):
     if start % 6 == 5:
         generate_6n1_code(start, dividers)
     else:
-        print('Start can not be written as 6n-1. Stopped code generation.')
+        print('%i can not be written as 6n-1. Choose another start number.' % start)
 
 
 if __name__ == '__main__':
