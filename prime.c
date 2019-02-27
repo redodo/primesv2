@@ -41,14 +41,28 @@ bool is_prime_fast(uint64_t n) {
     if (n <= 3 ) {
         return n == 3;
     }
-    // Check the number against 3, 5 and 7.
     _prime_check(n,  3,    9);
     _prime_check(n,  5,   25);
     _prime_check(n,  7,   49);
-    // A number larger than 3 is only prime when it can be written as 6n±1.
-    if ((n % 6 & 3) != 1) {
+
+    // A prime number larger than 3 can always be written as 6n±1.
+    //
+    // We can return false if the number is not next to a multiple of 6. Which
+    // can be checked by doing a mod 6 on the number. The output should be 1 or 5:
+    //
+    //     i        | ...  3   4   5   6   7   8   9  10  11  12  13  ...
+    //     i mod 6  | ...  3   4   5   0   1   2   3   4   5   0   1  ...
+    //                             ^       ^               ^       ^
+    //                           6*1-1   6*1+1           6*2-1   6*2+1
+    //
+    // At this point however, i mod 6 is always 1 or 5, because we eliminated all
+    // multiples of 2 and 3.  But, somehow, keeping this code here saves 83ms when
+    // checking the first 10,000,000 numbers for primality...
+    uint8_t mod = n % 6;
+    if (mod != 1 && mod != 5) {
         return false;
     }
+
     // Check the number against all primes from 11 until 67.
     _prime_check(n, 11,  121);
     _prime_check(n, 13,  169);
@@ -68,7 +82,7 @@ bool is_prime_fast(uint64_t n) {
 
     // Exhaust all other options.
     uint64_t max_d = (uint64_t) sqrt((long double) n) + 1;
-    uint64_t d = 71;
+    uint64_t d = 5;
     while (true) {
         // We skip division with multiples of 5 and 7.
         // Which is why we have this hardcoded loop of 35 operations (5 * 7)
@@ -76,8 +90,9 @@ bool is_prime_fast(uint64_t n) {
         // This further limits the numbers we divide with by 31%
         //
         // Skipping 11 too would require a loop of 385 operations (5 * 7 * 11)
-
         //
+        // Dashes are possible prime numbers. Numbers mark division.
+        // '------------------------------.
         _6n1_both(  n, d, max_d,  8); // - - ...1
         _6n1_right( n, d, max_d,  4); // 7 - ...2
         _6n1_left(  n, d, max_d,  6); // - 5 ...3
@@ -136,6 +151,6 @@ void run_prime_fast(uint64_t range) {
 
 int main() {
     //test_prime_fast(10000000);
-    run_prime_fast(5000000);
+    run_prime_fast(10000000);
     return 0;
 }
