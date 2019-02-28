@@ -20,8 +20,8 @@ def benchmark(number, command):
     avg = sum(timings) / len(timings)
     med = sorted(timings)[len(timings) >> 1]
 
-    print(f'avg = {avg:.3f}s')
-    print(f'med = {med:.3f}s')
+    print(f'          {avg:.3f}s average')
+    print(f'          {med:.3f}s median')
 
 
 if __name__ == '__main__':
