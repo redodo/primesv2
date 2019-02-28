@@ -18,7 +18,7 @@ def benchmark(number, command):
         print(f'{i+1:>4} took {timing:.3f}s')
 
     avg = sum(timings) / len(timings)
-    med = timings[len(timings) >> 1]
+    med = sorted(timings)[len(timings) >> 1]
 
     print(f'avg = {avg:.3f}s')
     print(f'med = {med:.3f}s')
